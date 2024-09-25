@@ -1,0 +1,44 @@
+Bootstrap: localimage
+From: core.sif
+
+%environment
+    #=======================================================================
+    # Python
+    #=======================================================================
+    # Use local Python instead of global Python packages.
+    # Ref 1: https://stackoverflow.com/questions/35835274/how-to-reuse-global-site-packages-in-conda-env
+    export PYTHONNOUSERSITE=True
+    export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
+    export PATH=$PATH:/opt/miniconda3/bin
+
+%post
+    #=======================================================================
+    # Miniconda Install
+    #=======================================================================
+    readonly CONDA_INSTALLER="miniconda3.sh"
+    readonly CONDA_VERSION="Miniconda3-py310_23.11.0-1-Linux-x86_64.sh"
+    readonly CONDA_PREFIX="/opt/miniconda3"
+
+    wget https://repo.anaconda.com/miniconda/${CONDA_VERSION} -O ${CONDA_INSTALLER}
+    bash ${CONDA_INSTALLER} -b -p ${CONDA_PREFIX}
+    rm ${CONDA_INSTALLER}
+
+    # Set Pathing
+    export CONDA_PYTHON_EXE=${CONDA_PREFIX}/bin/python
+    export PATH=$PATH:${CONDA_PREFIX}/bin
+
+    #=======================================================================
+    # File Permissions
+    #=======================================================================
+    # Make all files accessible
+    chmod --recursive 777 /opt
+    chmod --recursive 777 $HOME
+
+    #=======================================================================
+    # Configure Shell
+    #=======================================================================
+    echo '. /opt/miniconda3/etc/profile.d/conda.sh' >> ~/.bashrc
+    echo 'conda activate base' >> ~/.bashrc
+
+%labels
+    Version: v1.0.0

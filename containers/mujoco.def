@@ -1,0 +1,30 @@
+Bootstrap: localimage
+From: miniconda.sif
+
+
+%environment
+    #=======================================================================
+    # Mujoco Dependencies
+    #=======================================================================
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/domi/.mujoco/mujoco210/bin
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia
+
+%post
+    #=======================================================================
+    # Using Custom Conda Environments
+    #=======================================================================
+    cd $HOME
+
+    # Installing custom libraries for mujoco
+    apt-get update
+    apt-get install -y libosmesa6-dev libgl1-mesa-glx libglfw3
+
+    # Installing Mujoco 210
+    readonly GITHUB_MUJOCO=https://github.com/deepmind/mujoco/releases/download/2.1.0/mujoco210-linux-x86_64.tar.gz
+
+    wget $GITHUB_MUJOCO -O mujoco210.tar.gz
+    tar -xzf mujoco210.tar.gz
+    rm mujoco210.tar.gz
+
+    mkdir -p $HOME/.mujoco
+    mv mujoco210 $HOME/.mujoco/

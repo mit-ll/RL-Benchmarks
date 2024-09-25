@@ -1,0 +1,80 @@
+bootstrap: docker
+From: ubuntu:22.04
+Stage: build
+
+
+%help
+    Build production container:
+    $ sudo singularity build <name>.sif <name>.def
+
+    Shell into singularity container:
+    $ singularity shell --tmp-sandbox --writable <name>.sif
+
+        --tmp-sandbox
+            Create temporary sandbox to test.
+        --writable
+            This option makes the file system accessible as read/write.
+
+    Binding to a volume:
+    $ singularity shell --bind host_mnt:container_mnt <name>.sif
+
+%environment
+    #=======================================================================
+    # Common Settings
+    #=======================================================================
+    # Ref 1: https://unix.stackexchange.com/questions/87745/what-does-lc-all-c-do
+    # Ref 2: https://unix.stackexchange.com/questions/168340/where-is-ld-library-path-how-do-i-set-the-ld-library-path-env-variable
+    export HOME="/domi"
+    export LC_ALL=C
+    export PATH=/root/.local/bin:/usr/local/bin:/usr/local/sbin:$PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+    export SINGULARITY_SHELL=/bin/bash
+
+    #=======================================================================
+    # Frontend
+    #=======================================================================
+    # Perform installation without requiring interactive user input.
+    # Ref 1: https://askubuntu.com/questions/972516/debian-frontend-environment-variable
+    export DEBIAN_FRONTEND=noninterative
+
+%post
+    #=======================================================================
+    # Environment
+    #=======================================================================
+    export HOME="/domi"
+
+    #=======================================================================
+    # Packages/Applications
+    #=======================================================================
+    apt-get update
+    apt-get install -y bashtop curl gcc git g++ make htop netcat neofetch nvtop s-tui tree vim wget zsh
+    apt-get clean
+
+    #=======================================================================
+    # Setup directories
+    #=======================================================================
+    # /dev needed for writable containers
+    # /usr/localtime is needed for time sync
+    mkdir -p /dev
+    touch /etc/localtime
+
+    #=======================================================================
+    # Shell Preferences
+    #=======================================================================
+    export OSH="${HOME}/.oh-my-bash"; bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
+
+    #=======================================================================
+    # Vim Preferences
+    #=======================================================================
+    git clone --depth=1 https://github.com/amix/vimrc.git ~/.vim_runtime
+    sh ~/.vim_runtime/install_awesome_vimrc.sh
+
+    #=======================================================================
+    # Configure Shell
+    #=======================================================================
+    echo 'cd $HOME' >> ~/.bashrc
+    echo 'export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring' >> ~/.bashrc
+    echo 'neofetch' >> ~/.bashrc
+
+%labels
+    Version: v1.0.0

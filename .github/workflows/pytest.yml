@@ -1,0 +1,65 @@
+##########################################################################################
+#   DESCRIPTION:  Runs pytests with multiple versions of python.
+#        AUTHOR:  W. Li
+#       VERSION:  1.0
+#       CREATED:  1/6/2024
+#
+# References:
+# * https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-pythonCommon
+#
+##########################################################################################
+
+name: pytests
+
+on:
+  # Configure the branches you want Github actions to run on.
+  # Leave blank if you want to run on all branches.
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Configure jobs
+jobs:
+  test:
+    # Set the OS and python versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    # Checkout the repo
+    steps:
+    - uses: actions/checkout@v4
+    # Setup the python environments to use.
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    # Install poetry and disable virtual environments.
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: false
+        virtualenvs-in-project: false
+        installer-parallel: true
+    # Install dependencies.
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction --with=dev --no-root
+    # Run pytest with coverage.
+    - name: Test with pytest
+      run: >
+        pytest
+        --doctest-modules
+        --cov=./
+        --cov-report=xml
+        --cov-report=html:pytest-results-${{ matrix.python-version }}
+    # Save artifacts from pytests.
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: pytest-results-${{ matrix.python-version }}
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
